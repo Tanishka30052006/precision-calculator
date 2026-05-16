@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PrecisionCalc | Smart Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+            padding: 1.5rem;
+        }
+
+        /* main calculator card */
+        .calculator {
+            background: rgba(22, 32, 42, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 3rem;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            padding: 1.8rem;
+            width: 100%;
+            max-width: 480px;
+            transition: all 0.2s ease;
+        }
+
+        /* app header with title */
+        .app-header {
+            text-align: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(100, 130, 150, 0.3);
+        }
+        
+        .app-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #e0f0ff, #aaccee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .app-sub {
+            font-size: 0.7rem;
+            color: #8aaec0;
+            margin-top: 0.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* display area */
+        .display {
+            background: #0e151c;
+            border-radius: 2rem;
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 2rem;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.05);
+            text-align: right;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .previous-operand {
+            min-height: 1.8rem;
+            font-size: 1.2rem;
+            color: #8aaec0;
+            letter-spacing: 0.5px;
+            font-weight: 400;
+        }
+
+        .current-operand {
+            font-size: 3rem;
+            font-weight: 600;
+            color: #f0f9ff;
+            line-height: 1.2;
+            margin-top: 0.3rem;
+            letter-spacing: 1px;
+        }
+
+        /* button grid */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.9rem;
+        }
+
+        /* universal button style */
+        .btn {
+            background: #1f2e3a;
+            border: none;
+            font-size: 1.6rem;
+            font-weight: 500;
+            padding: 1rem 0;
+            border-radius: 2rem;
+            color: #eef4ff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 5px 0 #0b1115;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #0b1115;
+        }
+
+        /* special styling */
+        .operator {
+            background: #2f4b62;
+            color: #ffdfb3;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .equals {
+            background: #e68a2e;
+            color: white;
+            box-shadow: 0 5px 0 #964b10;
+            font-weight: 700;
+        }
+
+        .clear {
+            background: #4b2e3b;
+            color: #ffbc9a;
+            font-weight: 600;
+        }
+
+        .delete {
+            background: #3a2c38;
+            color: #f7cfb0;
+            font-size: 1.4rem;
+        }
+
+        .number {
+            background: #253746;
+            font-weight: 600;
+        }
+
+        .dot {
+            background: #253746;
+            font-weight: 700;
+        }
+
+        /* zero spans two columns? optional but keep clean */
+        .btn-zero {
+            grid-column: span 1;
+        }
+
+        /* subtle hover (desktop) */
+        @media (hover: hover) {
+            .btn:hover {
+                filter: brightness(1.08);
+                background: #2e4253;
+            }
+            .operator:hover {
+                background: #3f627e;
+            }
+            .equals:hover {
+                background: #f79a42;
+            }
+            .clear:hover {
+                background: #674152;
+            }
+        }
+
+        /* responsive adjustments */
+        @media (max-width: 450px) {
+            .calculator {
+                padding: 1.2rem;
+            }
+            .btn {
+                font-size: 1.4rem;
+                padding: 0.9rem 0;
+            }
+            .current-operand {
+                font-size: 2.4rem;
+            }
+            .buttons {
+                gap: 0.7rem;
+            }
+            .app-title {
+                font-size: 1.3rem;
+            }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 1.8rem;
+            font-size: 0.7rem;
+            color: #7a95a8;
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="app-header">
+        <div class="app-title">⚡ PRECISIONCALC</div>
+        <div class="app-sub">smart arithmetic · instant result</div>
+    </div>
+    <div class="display">
+        <div class="previous-operand" id="previousDisplay">0</div>
+        <div class="current-operand" id="currentDisplay">0</div>
+    </div>
+    <div class="buttons">
+        <!-- Row 1 -->
+        <button class="btn clear" data-action="clear">AC</button>
+        <button class="btn delete" data-action="delete">⌫</button>
+        <button class="btn operator" data-op="%">%</button>
+        <button class="btn operator" data-op="/">÷</button>
+
+        <!-- Row 2 -->
+        <button class="btn number" data-number="7">7</button>
+        <button class="btn number" data-number="8">8</button>
+        <button class="btn number" data-number="9">9</button>
+        <button class="btn operator" data-op="*">×</button>
+
+        <!-- Row 3 -->
+        <button class="btn number" data-number="4">4</button>
+        <button class="btn number" data-number="5">5</button>
+        <button class="btn number" data-number="6">6</button>
+        <button class="btn operator" data-op="-">−</button>
+
+        <!-- Row 4 -->
+        <button class="btn number" data-number="1">1</button>
+        <button class="btn number" data-number="2">2</button>
+        <button class="btn number" data-number="3">3</button>
+        <button class="btn operator" data-op="+">+</button>
+
+        <!-- Row 5 -->
+        <button class="btn number btn-zero" data-number="0">0</button>
+        <button class="btn number dot" data-dot=".">.</button>
+        <button class="btn equals" data-equals="=">=</button>
+    </div>
+    <footer>⌨️ keyboard support · precision arithmetic</footer>
+</div>
+
+<script>
+    // ---------- DOM elements ----------
+    const previousOperandElement = document.getElementById('previousDisplay');
+    const currentOperandElement = document.getElementById('currentDisplay');
+
+    // ---------- Calculator state ----------
+    let currentOperand = '0';      // string representation for display & evaluation
+    let previousOperand = '';
+    let operation = null;           // current operator (+, -, *, /, %)
+    let waitingForNewOperand = false;  // after operator or equals, next digit resets current
+    let evaluationJustHappened = false; // flag to handle consecutive equals
+
+    // Helper: format display number (trim trailing . and limit length)
+    function formatNumber(numberStr) {
+        if (numberStr === '') return '';
+        // remove leading zeros except when it's exactly '0' or decimal starts with 0.
+        if (numberStr.includes('.')) {
+            let parts = numberStr.split('.');
+            let integerPart = parts[0].replace(/^0+/, '');
+            if (integerPart === '') integerPart = '0';
+            let decimalPart = parts[1].slice(0, 10); // limit decimals length
+            let formatted = integerPart + '.' + decimalPart;
+            // remove trailing decimal zeros if any (cosmetic)
+            formatted = formatted.replace(/\.?0+$/, '');
+            if (formatted.endsWith('.')) formatted = formatted.slice(0, -1);
+            if (formatted === '') return '0';
+            // avoid scientific notation for super long? not needed
+            if (formatted.length > 16) {
+                return Number(formatted).toExponential(8);
+            }
+            return formatted;
+        } else {
+            // integer: remove leading zeros
+            let cleaned = numberStr.replace(/^0+/, '');
+            if (cleaned === '') cleaned = '0';
+            if (cleaned.length > 14) {
+                // show in scientific if too big (avoid UI overflow)
+                return Number(cleaned).toExponential(8);
+            }
+            return cleaned;
+        }
+    }
+
+    // update entire display from state
+    function updateDisplay() {
+        // current operand display
+        let displayCurr = currentOperand === '' ? '0' : currentOperand;
+        if (displayCurr === 'Infinity') displayCurr = 'Error';
+        if (displayCurr === 'NaN') displayCurr = 'Error';
+        currentOperandElement.innerText = formatNumber(displayCurr);
+
+        // previous operand + operator formatting
+        if (operation !== null && previousOperand !== '') {
+            let prevFormatted = formatNumber(previousOperand);
+            let opSymbol = '';
+            switch (operation) {
+                case '+': opSymbol = '+'; break;
+                case '-': opSymbol = '−'; break;
+                case '*': opSymbol = '×'; break;
+                case '/': opSymbol = '÷'; break;
+                case '%': opSymbol = '%'; break;
+                default: opSymbol = operation;
+            }
+            previousOperandElement.innerText = `${prevFormatted} ${opSymbol}`;
+        } else {
+            if (previousOperand !== '' && operation === null && !waitingForNewOperand) {
+                // edge case when result stored
+                previousOperandElement.innerText = formatNumber(previousOperand);
+            } else if (previousOperand === '' && operation === null) {
+                previousOperandElement.innerText = '';
+            } else {
+                let rawPrev = previousOperand === '' ? '' : formatNumber(previousOperand);
+                previousOperandElement.innerText = rawPrev;
+            }
+        }
+        // if error case clear extra
+        if (currentOperand === 'Error') {
+            previousOperandElement.innerText = '';
+        }
+    }
+
+    // core computation: (prev) operation (curr)
+    function computeResult() {
+        if (operation === null || previousOperand === '' || currentOperand === '') return null;
+        let prev = parseFloat(previousOperand);
+        let curr = parseFloat(currentOperand);
+        if (isNaN(prev) || isNaN(curr)) return null;
+
+        let result;
+        switch (operation) {
+            case '+':
+                result = prev + curr;
+                break;
+            case '-':
+                result = prev - curr;
+                break;
+            case '*':
+                result = prev * curr;
+                break;
+            case '/':
+                if (curr === 0) return 'Error';
+                result = prev / curr;
+                break;
+            case '%':
+                result = prev % curr;
+                break;
+            default:
+                return null;
+        }
+        // handle floating precision (limit decimals)
+        if (typeof result === 'number') {
+            if (!isFinite(result)) return 'Error';
+            // round to 10 decimal places to avoid .30000000004
+            result = parseFloat(result.toFixed(10));
+            return result.toString();
+        }
+        return result;
+    }
+
+    // evaluate and set the new current operand, reset operation flags
+    function evaluate() {
+        if (operation === null || previousOperand === '' || currentOperand === '') {
+            // if no operation pending but equals pressed, keep same but maybe repeat?
+            if (previousOperand !== '' && currentOperand !== '' && operation === null) {
+                // nothing to evaluate -> stable
+            }
+            return false;
+        }
+        let computed = computeResult();
+        if (computed === 'Error') {
+            currentOperand = 'Error';
+            previousOperand = '';
+            operation = null;
+            waitingForNewOperand = false;
+            evaluationJustHappened = true;
+            updateDisplay();
+            return false;
+        }
+        if (computed !== null) {
+            // store result as current operand
+            currentOperand = computed;
+            previousOperand = '';
+            operation = null;
+            waitingForNewOperand = true;   // after equals, next digit starts new expression
+            evaluationJustHappened = true;
+            updateDisplay();
+            return true;
+        }
+        return false;
+    }
+
+    // append number / digit handler
+    function appendNumber(number) {
+        if (currentOperand === 'Error') {
+            resetCalculator();
+        }
+        // if waiting for new operand (after operator or equals) we replace current
+        if (waitingForNewOperand) {
+            currentOperand = number;
+            waitingForNewOperand = false;
+            evaluationJustHappened = false;
+        } else {
+            // prevent multiple zeros prefix
+            if (currentOperand === '0' && number !== '.') {
+                currentOperand = number;
+            } else {
+                currentOperand = currentOperand + number;
+            }
+        }
+        // limit length (prevent display overflow)
+        if (currentOperand.length > 18) {
+            currentOperand = currentOperand.slice(0, 18);
+        }
+        updateDisplay();
+    }
+
+    // decimal point handler
+    function appendDot() {
+        if (currentOperand === 'Error') {
+            resetCalculator();
+        }
+        if (waitingForNewOperand) {
+            // start with "0."
+            currentOperand = '0.';
+            waitingForNewOperand = false;
+            evaluationJustHappened = false;
+            updateDisplay();
+            return;
+        }
+        // avoid double dot
+        if (!currentOperand.includes('.')) {
+            currentOperand = currentOperand + '.';
+        }
+        updateDisplay();
+    }
+
+    // operator selection (+, -, *, /, %)
+    function chooseOperator(op) {
+        if (currentOperand === 'Error') {
+            resetCalculator();
+        }
+        // If we already have an operation and not waiting, compute previous before new operator (chaining)
+        if (operation !== null && !waitingForNewOperand && previousOperand !== '' && currentOperand !== '') {
+            let computed = computeResult();
+            if (computed === 'Error') {
+                currentOperand = 'Error';
+                previousOperand = '';
+                operation = null;
+                waitingForNewOperand = false;
+                updateDisplay();
+                return;
+            }
+            if (computed !== null) {
+                previousOperand = computed;
+                currentOperand = '';
+                operation = op;
+                waitingForNewOperand = true;
+                updateDisplay();
+                return;
+            }
+        }
+        // Normal case: store previous operand & operator
+        if (currentOperand !== '') {
+            previousOperand = currentOperand;
+            operation = op;
+            waitingForNewOperand = true;
+            currentOperand = '';
+            updateDisplay();
+        } else if (previousOperand !== '' && waitingForNewOperand) {
+            // if just after operator and we change operator (like 5 + then change to -)
+            operation = op;
+            updateDisplay();
+        }
+    }
+
+    // Clear everything (AC)
+    function resetCalculator() {
+        currentOperand = '0';
+        previousOperand = '';
+        operation = null;
+        waitingForNewOperand = false;
+        evaluationJustHappened = false;
+        updateDisplay();
+    }
+
+    // delete last character (backspace)
+    function deleteLast() {
+        if (currentOperand === 'Error') {
+            resetCalculator();
+            return;
+        }
+        if (waitingForNewOperand && previousOperand !== '' && operation !== null) {
+            // if waiting after operator but no number typed, nothing to delete? ignore
+            return;
+        }
+        if (currentOperand.length === 1) {
+            currentOperand = '0';
+        } else if (currentOperand.length > 0) {
+            currentOperand = currentOperand.slice(0, -1);
+            if (currentOperand === '') currentOperand = '0';
+        }
+        updateDisplay();
+    }
+
+    // Special handling for percentage: directly compute percentage on current operand relative to previous?
+    // Better: treat % as modulo operator (we already have %). But we can also improve: if equals not needed.
+    // Modulo logic fine in computeResult.
+    // edge: additional equals repeat?
+    function handleEquals() {
+        if (currentOperand === 'Error') {
+            resetCalculator();
+            return;
+        }
+        // If there's a pending operation, evaluate it.
+        if (operation !== null && previousOperand !== '' && !waitingForNewOperand && currentOperand !== '') {
+            evaluate();
+        } 
+        else if (operation !== null && previousOperand !== '' && waitingForNewOperand && currentOperand === '') {
+            // case like "5 +" and pressing equals: repeat previous operation with same operand? normally should show 5+5 =10
+            if (previousOperand !== '') {
+                currentOperand = previousOperand;
+                waitingForNewOperand = false;
+                let result = computeResult();
+                if (result === 'Error') {
+                    currentOperand = 'Error';
+                    previousOperand = '';
+                    operation = null;
+                } else if (result !== null) {
+                    currentOperand = result;
+                    previousOperand = '';
+                    operation = null;
+                }
+                waitingForNewOperand = true;
+                evaluationJustHappened = true;
+                updateDisplay();
+            }
+        }
+        else if (evaluationJustHappened && previousOperand === '' && operation === null && currentOperand !== '') {
+            // repeated equals on result: do nothing but keep stable
+        }
+        else {
+            // no operation, do nothing
+            if (currentOperand !== '' && previousOperand === '') {
+                // nothing to compute
+            }
+        }
+        // after equals, waitingForNewOperand must be true
+        waitingForNewOperand = true;
+        evaluationJustHappened = true;
+        updateDisplay();
+    }
+
+    // attach button events via delegation
+    function attachEvents() {
+        const buttonsContainer = document.querySelector('.buttons');
+        buttonsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn');
+            if (!btn) return;
+
+            // Number button
+            if (btn.classList.contains('number') && btn.hasAttribute('data-number')) {
+                const num = btn.getAttribute('data-number');
+                appendNumber(num);
+                return;
+            }
+            // Dot
+            if (btn.classList.contains('dot') || (btn.innerText === '.' && btn.hasAttribute('data-dot'))) {
+                appendDot();
+                return;
+            }
+            // Operator (+, -, ×, ÷, %)
+            if (btn.classList.contains('operator') && btn.hasAttribute('data-op')) {
+                let opRaw = btn.getAttribute('data-op');
+                let mappedOp = '';
+                if (opRaw === '+') mappedOp = '+';
+                else if (opRaw === '-') mappedOp = '-';
+                else if (opRaw === '*') mappedOp = '*';
+                else if (opRaw === '/') mappedOp = '/';
+                else if (opRaw === '%') mappedOp = '%';
+                else mappedOp = opRaw;
+                chooseOperator(mappedOp);
+                return;
+            }
+            // Equals
+            if (btn.classList.contains('equals') || btn.getAttribute('data-equals') === '=') {
+                handleEquals();
+                return;
+            }
+            // Clear AC
+            if (btn.classList.contains('clear') || btn.innerText === 'AC') {
+                resetCalculator();
+                return;
+            }
+            // Delete (backspace)
+            if (btn.classList.contains('delete') || btn.innerText === '⌫') {
+                deleteLast();
+                return;
+            }
+        });
+    }
+
+    // keyboard support for professional feel
+    function attachKeyboardSupport() {
+        window.addEventListener('keydown', (e) => {
+            const key = e.key;
+            // numbers
+            if (/[0-9]/.test(key)) {
+                e.preventDefault();
+                appendNumber(key);
+            }
+            // decimal point
+            if (key === '.') {
+                e.preventDefault();
+                appendDot();
+            }
+            // operators
+            if (key === '+' || key === '-') {
+                e.preventDefault();
+                chooseOperator(key);
+            }
+            if (key === '*') {
+                e.preventDefault();
+                chooseOperator('*');
+            }
+            if (key === '/') {
+                e.preventDefault();
+                chooseOperator('/');
+            }
+            if (key === '%') {
+                e.preventDefault();
+                chooseOperator('%');
+            }
+            // Enter or = for equals
+            if (key === 'Enter' || key === '=') {
+                e.preventDefault();
+                handleEquals();
+            }
+            // Escape to clear
+            if (key === 'Escape') {
+                e.preventDefault();
+                resetCalculator();
+            }
+            // Backspace
+            if (key === 'Backspace') {
+                e.preventDefault();
+                deleteLast();
+            }
+            // Delete (also reset)
+            if (key === 'Delete') {
+                e.preventDefault();
+                resetCalculator();
+            }
+        });
+    }
+
+    // initialization
+    function init() {
+        resetCalculator();
+        attachEvents();
+        attachKeyboardSupport();
+    }
+
+    init();
+</script>
+</body>
+</html>
